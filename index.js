@@ -11,21 +11,46 @@ const quizRoutes = require("./routes/quiz");
 const app = express();
 
 // Enable Cors
-// app.use(cors());
-app.use(
-	cors({
-		origin: "*", // Allow requests from this origin
-	})
-);
+app.use(cors());
 
 //Middleware bodyParser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Register Route
-app.use("/api/user", userRoutes);
-app.use("/api/quiz", quizRoutes);
-app.get("/", async (req, res) => {
+app.use(
+	"/api/user",
+	(req, res) => {
+		console.log(
+			"requiest recieved : /api/user",
+			json.stringify({
+				body: req.body,
+				method: req.method,
+				url: req.url,
+				headers: req.headers,
+				query: req.query,
+			})
+		);
+	},
+	userRoutes
+);
+app.use(
+	"/api/quiz",
+	(req, res) => {
+		console.log(
+			"requiest recieved : /api/quiz",
+			json.stringify({
+				body: req.body,
+				method: req.method,
+				url: req.url,
+				headers: req.headers,
+				query: req.query,
+			})
+		);
+	},
+	quizRoutes
+);
+app.get("*", async (req, res) => {
 	res.status(200).json({
 		message: "Server is up and running",
 		createdAt: new Date().toISOString(),
