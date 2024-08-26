@@ -21,9 +21,22 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Register Route
-app.use("/api/user", userRoutes);
-app.use("/api/quiz", quizRoutes);
+app.use(
+	"/api/user",
+	async () => {
+		await connectDb();
+	},
+	userRoutes
+);
+app.use(
+	"/api/quiz",
+	async () => {
+		await connectDb();
+	},
+	quizRoutes
+);
 app.get("*", async (req, res) => {
+	await connectDb();
 	res.status(200).json({
 		message: "Server is up and running",
 		createdAt: new Date().toISOString(),
