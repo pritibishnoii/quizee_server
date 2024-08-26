@@ -3,7 +3,9 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const morgan = require("morgan");
 dotenv.config();
+const Port = process.env.PORT || 8000;
 
 const userRoutes = require("./routes/user");
 const quizRoutes = require("./routes/quiz");
@@ -12,44 +14,15 @@ const app = express();
 
 // Enable Cors
 app.use(cors());
+app.use(morgan("combined"));
 
 //Middleware bodyParser
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Register Route
-app.use(
-	"/api/user",
-	(req, res) => {
-		console.log(
-			"requiest recieved : /api/user",
-			json.stringify({
-				body: req.body,
-				method: req.method,
-				url: req.url,
-				headers: req.headers,
-				query: req.query,
-			})
-		);
-	},
-	userRoutes
-);
-app.use(
-	"/api/quiz",
-	(req, res) => {
-		console.log(
-			"requiest recieved : /api/quiz",
-			json.stringify({
-				body: req.body,
-				method: req.method,
-				url: req.url,
-				headers: req.headers,
-				query: req.query,
-			})
-		);
-	},
-	quizRoutes
-);
+app.use("/api/user", userRoutes);
+app.use("/api/quiz", quizRoutes);
 app.get("*", async (req, res) => {
 	res.status(200).json({
 		message: "Server is up and running",
@@ -63,14 +36,22 @@ app.use((err, req, res, next) => {
 	res.status(500).json({ error: "Internal server Error" });
 });
 
-const Port = process.env.PORT || 8000;
-app.listen(Port, () => {
-	mongoose
-		.connect(process.env.MONGODB_URL)
-		.then(() =>
-			console.log(
-				`Server is running  on http://localhost:${Port} database connection successfully`
-			)
-		)
-		.catch((error) => console.log(error));
+let mongo_instance = null;
+
+const connectDb = async () => {
+	try {
+		if (mongo_instance) return mongo_instance;
+		mongo_instance = await mongoose.connect(process.env.MONGODB_URL);
+		console.log(`database connection successfully`);
+		return mongo_instance;
+	} catch (error) {
+		console.error(`Failed to connect to the database: ${error.message}`);
+		return null;
+	}
+};
+
+connectDb().then(() => {
+	app.listen(Port, () => {
+		console.log("server is running on port ", Port);
+	});
 });
